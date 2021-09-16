@@ -1,0 +1,1 @@
+delete SAVEPLUS.dbo.semaphor
