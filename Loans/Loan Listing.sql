@@ -137,7 +137,17 @@ select
                 lp.auto_debit_sa_4_loan_payment=1
             then dbo.get_loan_data_dynamic_string(ld.loan_no,'Account No')
            else ''
-		end as autodebit_acct
+		end as autodebit_acct,
+
+		case 					
+				when ld.creation_type = 0 then 'New Loan'				
+				when ld.creation_type = 1 then 'Reloan'				
+				when ld.creation_type = 2 then 'Restructured Loan'				
+				when ld.creation_type = 3 then 'Continuation Loan'				
+				when ld.creation_type = 4 then 'Extention Loan'				
+				when ld.creation_type = 5 then 'Renewal Loan'				
+			else 'Additional Loan'					
+			end as creation_type
 ---------------to know autodebit ends
   --select top 1 * 
   from webloan.dbo.loan_data ld	
@@ -151,4 +161,6 @@ select
 	DATEDIFF(day,date_granted,@date_end) >= 0 -- use < if releases on or after
 	--and ld.loan_no in ('1000337')	
 	and WEBLOAN.dbo.is_loan(ld.loan_no) = 1
+
+	and dbo.get_loan_status(bk,bch,ld.loan_no,@date_end) = 10
   order by ld.bch;
