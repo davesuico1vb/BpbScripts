@@ -162,5 +162,5 @@ select
 	--and ld.loan_no in ('1000337')	
 	and WEBLOAN.dbo.is_loan(ld.loan_no) = 1
 
-	and dbo.get_loan_status(bk,bch,ld.loan_no,@date_end) = 10
+	and dbo.get_loan_status(bk,bch,ld.loan_no,@date_end) <> 10
   order by ld.bch;
