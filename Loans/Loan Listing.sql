@@ -39,8 +39,14 @@ select
 			and ld.bch=lai.bch 
 			and ld.acct_no=lai.acct_no) as cis_no,
        dbo.get_name_from_loan_no(ld.loan_no) as customer_name,
+	   (select h_sadd from WEBLOAN.dbo.cis_info z where z.cis_no = (select lai.cis_no
+                from loan_acct_info lai
+                where ld.bk=lai.bk
+                    and ld.bch=lai.bch
+                    and ld.acct_no=lai.acct_no))CustomerAddress,
+                ld.date_granted DateGranted,
+                convert(varchar,ld.date_maturity,101) MaturityDate,
 	   ld.date_granted,							
-	   ld.date_maturity,							
 	   ld.principal,							
 	   dbo.get_virtual_principal_bal(bk,bch,acct_no,ld.loan_no,@date_end) as 'bpb_prin_bal',
 	   
