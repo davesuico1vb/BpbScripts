@@ -1,22 +1,23 @@
- declare @date_end datetime= @Date
+declare @date_end datetime= @Date
 
+            
             select
                 z.*,
 
                 CASE
-                                    WHEN z.LoanAge = 0	 			THEN 'A. CURRENT' 
-                                    WHEN LoanAge > 0 AND LoanAge <= 30	THEN 'B. 1 TO 30'
-                                    WHEN LoanAge > 30 AND LoanAge <= 60	THEN 'C. 31 TO 60'
-                                    WHEN LoanAge > 60 AND LoanAge <= 90	THEN 'D. 61 TO 90'
-                                    WHEN LoanAge > 90 AND LoanAge <= 180	THEN 'E. 91 TO 180'
-                                    WHEN LoanAge > 180 AND LoanAge <= 360	THEN 'F. 181 TO 360'
-                                    WHEN LoanAge > 360 AND LoanAge <= 720	THEN 'G. 361 TO 720'
-                                    WHEN LoanAge > 720				THEN 'H. 721 & UP'
-                                    END as LoanAgeDescription
+                WHEN z.LoanAge = 0	 			THEN 'A. CURRENT' 
+                WHEN LoanAge > 0 AND LoanAge <= 30	THEN 'B. 1 TO 30'
+                WHEN LoanAge > 30 AND LoanAge <= 60	THEN 'C. 31 TO 60'
+                WHEN LoanAge > 60 AND LoanAge <= 90	THEN 'D. 61 TO 90'
+                WHEN LoanAge > 90 AND LoanAge <= 180	THEN 'E. 91 TO 180'
+                WHEN LoanAge > 180 AND LoanAge <= 360	THEN 'F. 181 TO 360'
+                WHEN LoanAge > 360 AND LoanAge <= 720	THEN 'G. 361 TO 720'
+                WHEN LoanAge > 720				THEN 'H. 721 & UP'
+                END as LoanAgeDescription
 
             from (
 
-                                select
+                                            select
                     ld.bch BranchId,
                     (select z.bch_add
                     from WEBLOAN.dbo.branch_set z
@@ -77,8 +78,8 @@
                     isnull((select sum(isnull(ag.int_amort,0))
                     from webloan.dbo.amort_guide ag
                     where ag.loan_no = ld.loan_no ) -
-                                                    
-                                        (select sum(isnull(ph.paid_int,0))
+                                                                
+                                                    (select sum(isnull(ph.paid_int,0))
                     from webloan.dbo.payment_history ph
                     where ph.loan_no=ld.loan_no and
                         datediff(day,payment_date,@date_end)>=0),0) as TotalInterestBalance,
@@ -104,15 +105,14 @@
                     ld.granted_rate GrantedRate,
                     ld.effective_rate_annum EffectiveRatePerAnnum,
                     case							
-                                                                when datediff(day,@date_end,ld.date_granted) > 0 then -1								
-                                                                when lp.pay_type=3 then datediff(day,dbo.get_last_uid(ld.loan_no,@date_end),@date_end) --- for UID ---								
-                                                    --- Daily Triggered / SavePlus StartUp -----------------------------------------------------------------------								
-                                                                when lp.auto_transfer_pastdue in (3,4) and
-                        lp.pay_type in (0,1,2)								
-                                                                        then datediff(day,dbo.get_min_amort_unpaid(ld.loan_no,@date_end),@date_end)								
-                                                    ------------------------------------------------------------------------------------------------------------								
-                                                                else datediff(day,dbo.get_min_amort_unpaid(ld.loan_no,@date_end),@date_end)								
-                                                            end as LoanAge,
+                    when datediff(day,@date_end,ld.date_granted) > 0 then -1								
+                    when lp.pay_type=3 then datediff(day,dbo.get_last_uid(ld.loan_no,@date_end),@date_end) --- for UID ---								
+                    --- Daily Triggered / SavePlus StartUp -----------------------------------------------------------------------								
+                    when lp.auto_transfer_pastdue in (3,4) and lp.pay_type in (0,1,2)								
+                    then datediff(day,dbo.get_min_amort_unpaid(ld.loan_no,@date_end),@date_end)								
+                    ------------------------------------------------------------------------------------------------------------								
+                    else datediff(day,dbo.get_min_amort_unpaid(ld.loan_no,@date_end),@date_end)								
+                    end as LoanAge,
                     dbo.get_loan_status_str(bk,bch,ld.loan_no,@date_end) as Status,
                     dbo.get_virtual_air_bal(bk,bch,ld.loan_no,@date_end) as AccruedInterestReceivable,
                     ld.air_bal AccruedInterestReceivableBalance,
@@ -145,8 +145,8 @@
                     from webloan.dbo.payment_history ph
                     where ph.loan_no= ld.loan_no
                         and datediff(day,payment_date,@date_end)>=0) +
-                                                            
-                                                            (select sum(isnull(ph.paid_principal,0))
+                                                                        
+                        (select sum(isnull(ph.paid_principal,0))
                     from webloan.dbo.payment_history ph
                     where ph.loan_no= ld.loan_no
                         and datediff(day,payment_date,@date_end)>=0),0) as TotalAmortPaid,
@@ -155,7 +155,7 @@
                     from webloan.dbo.amort_guide ag
                     where ag.loan_no = ld.loan_no and datediff(day,amort_date,@date_end)>=0) -
 
-                                                        (select sum(isnull(ph.paid_principal,0))
+                    (select sum(isnull(ph.paid_principal,0))
                     from webloan.dbo.payment_history ph
                     where ph.loan_no= ld.loan_no
                         and datediff(day,payment_date,@date_end)>=0),0) as TotalPrincipalOverdue,
@@ -165,7 +165,7 @@
                     from webloan.dbo.amort_guide ag
                     where ag.loan_no = ld.loan_no and datediff(day,amort_date,@date_end)>=0) -
 
-                                                        (select sum(isnull(ph.paid_int,0))
+                    (select sum(isnull(ph.paid_int,0))
                     from webloan.dbo.payment_history ph
                     where ph.loan_no= ld.loan_no
                         and datediff(day,payment_date,@date_end)>=0),0) as TotalInterestOverdue,
@@ -175,13 +175,13 @@
                     from webloan.dbo.amort_guide ag
                     where ag.loan_no = ld.loan_no and datediff(day,amort_date,@date_end)>=0),0) -
 
-                                                            
-                                                            isnull((select sum(isnull(ph.paid_int,0))
+                                                                        
+                    isnull((select sum(isnull(ph.paid_int,0))
                     from webloan.dbo.payment_history ph
                     where ph.loan_no= ld.loan_no
                         and datediff(day,payment_date,@date_end)>=0) +
-                                                            
-                                                            (select sum(isnull(ph.paid_principal,0))
+                                                                        
+                        (select sum(isnull(ph.paid_principal,0))
                     from webloan.dbo.payment_history ph
                     where ph.loan_no= ld.loan_no
                         and datediff(day,payment_date,@date_end)>=0),0)) as CollectibleAdvance,
@@ -235,6 +235,22 @@
                     (select top 1
                         int.payment_date
                     from
+                        (                                                select ph.payment_date, ph.paid_pdi as int_paid
+                            from webloan.dbo.payment_history ph
+                            where ph.bch = ld.bch and ph.loan_no = ld.loan_no
+                                and ph.paid_pdi > 0 and DATEDIFF(day,payment_date,@date_end) >= 0
+                        union all
+                            select ph.payment_date, ph.paid_int as int_paid
+                            from webloan.dbo.payment_history ph
+                            where ph.bch = ld.bch and ph.loan_no = ld.loan_no
+                                and ph.paid_int > 0 and DATEDIFF(day,payment_date,@date_end) >= 0
+                        ) as int
+                    order by int.payment_date desc) LatestInterestPaidDate,
+
+
+                    (select top 1
+                        int.int_paid
+                    from
                         (                                select ph.payment_date, ph.paid_pdi as int_paid
                             from webloan.dbo.payment_history ph
                             where ph.bch = ld.bch and ph.loan_no = ld.loan_no
@@ -244,23 +260,7 @@
                             from webloan.dbo.payment_history ph
                             where ph.bch = ld.bch and ph.loan_no = ld.loan_no
                                 and ph.paid_int > 0 and DATEDIFF(day,payment_date,@date_end) >= 0
-            ) as int
-                    order by int.payment_date desc) LatestInterestPaidDate,
-
-
-                    (select top 1
-                        int.int_paid
-                    from
-                        (                select ph.payment_date, ph.paid_pdi as int_paid
-                            from webloan.dbo.payment_history ph
-                            where ph.bch = ld.bch and ph.loan_no = ld.loan_no
-                                and ph.paid_pdi > 0 and DATEDIFF(day,payment_date,@date_end) >= 0
-                        union all
-                            select ph.payment_date, ph.paid_int as int_paid
-                            from webloan.dbo.payment_history ph
-                            where ph.bch = ld.bch and ph.loan_no = ld.loan_no
-                                and ph.paid_int > 0 and DATEDIFF(day,payment_date,@date_end) >= 0
-            ) as int
+                        ) as int
                     order by int.payment_date desc) LatestInterestPaidAmount,
 
 
@@ -281,29 +281,40 @@
 
 
                     case
-                                                            when dbo.get_loan_data_dynamic_boolean(ld.loan_no,'Auto Debit Advice')=1 or
+                        when dbo.get_loan_data_dynamic_boolean(ld.loan_no,'Auto Debit Advice')=1 or
                         lp.auto_debit_sa_4_loan_payment=1
-                                                                then dbo.get_loan_data_dynamic_string(ld.loan_no,'Account No')
-                                                            else ''
-                                                            end as AutoDebitAccount,
+                        then dbo.get_loan_data_dynamic_string(ld.loan_no,'Account No')
+                    else ''
+                    end as AutoDebitAccount,
                     case 					
-                                        when ld.creation_type = 0 then 'New Loan'				
-                                        when ld.creation_type = 1 then 'Reloan'				
-                                        when ld.creation_type = 2 then 'Restructured Loan'				
-                                        when ld.creation_type = 3 then 'Continuation Loan'				
-                                        when ld.creation_type = 4 then 'Extention Loan'				
-                                        when ld.creation_type = 5 then 'Renewal Loan'				
-                                    else 'Additional Loan'					
-                                    end as CreationType,
+                        when ld.creation_type = 0 then 'New Loan'				
+                        when ld.creation_type = 1 then 'Reloan'				
+                        when ld.creation_type = 2 then 'Restructured Loan'				
+                        when ld.creation_type = 3 then 'Continuation Loan'				
+                        when ld.creation_type = 4 then 'Extention Loan'				
+                        when ld.creation_type = 5 then 'Renewal Loan'				
+                    else 'Additional Loan'					
+                    end as CreationType,
 
-                isnull((select ldi.pdi
+                    isnull((select ldi.pdi
                     from webloan_reports.dbo.loan_data_info ldi
-                    where ld.loan_no = ldi.loan_no),0) as PastDueInterestBalance
+                    where ld.loan_no = ldi.loan_no),0) as PastDueInterestBalance,
+
+                    (select top 1
+                        opm.old_product_type
+                    from READONLY.dbo.old_product_mapping opm
+                    where ld.loan_product = opm.schemeidbyte) as OldLoanProduct,
+
+                    (select c.description
+                        from webloan.dbo.mis_group c
+                        where c.group_no = 4 ---mis 4 loan purpose to industry
+                        and c.child_node = 1 
+                        and ld.cat_loan_industry = c.id_code) as LoanPurposeToIndustry
 
                 from webloan.dbo.loan_data ld	
-                                                        with (nolock)
+                                                                    with (nolock)
                     join webloan.dbo.loan_product lp								
-                                                        with (nolock)
+                                                                    with (nolock)
                     on ld.loan_product=lp.id_code
                 where ld.bch=isnull(@BranchId,ld.bch)
                     and
@@ -315,6 +326,6 @@
                     and not exists (select 1
                     from READONLY.dbo.loan_listing_exclusions a
                     where ld.loan_no = a.loan_no)
-                            ) z
+                                        ) z
 
             order by z.BranchId
