@@ -1,6 +1,6 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[COMPILE_DEPOSIT_LISTING]    Script Date: 10/13/2021 7:46:06 PM ******/
+/****** Object:  StoredProcedure [dbo].[COMPILE_DEPOSIT_LISTING]    Script Date: 10/19/2021 3:11:00 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -22,7 +22,7 @@ as
                 l.cis_no CustomerId,
                 saveplus.dbo.get_name_from_acct_no(a.bk,a.bch,a.acct_no) CustomerName,
                 a.name AccountName,
-                a.add2 Address,
+                (select z.h_sadd from WEBLOAN.dbo.cis_info z where l.cis_no = z.cis_no) Address,
                 a.rxclass as ByteScheme,
                 
                 (select top 1 b.schemeid 
@@ -60,6 +60,8 @@ as
             where open_date <= @CutOffDate and
                     close_date is null
 
+				and a.rxclass not in ('AR1','AP1')
+
                     
             union all	
                 
@@ -71,7 +73,7 @@ as
                 l.cis_no CustomerId,
                 saveplus.dbo.get_name_from_acct_no(a.bk,a.bch,a.acct_no) CustomerName,
                 a.name AccountName,
-                a.add2 Address,
+                (select z.h_sadd from WEBLOAN.dbo.cis_info z where l.cis_no = z.cis_no) Address,
                 a.caclass as ByteScheme,
                 
                 (select top 1 b.schemeid 
