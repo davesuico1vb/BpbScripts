@@ -1,6 +1,6 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 10/18/2021 5:26:05 PM ******/
+/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 10/20/2021 11:09:15 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -26,7 +26,7 @@ as
                 WHEN LoanAge > 180 AND LoanAge <= 360	THEN 'F. 181 TO 360'
                 WHEN LoanAge > 360 AND LoanAge <= 720	THEN 'G. 361 TO 720'
                 WHEN LoanAge > 720				THEN 'H. 721 & UP'
-                END as LoanAgeDescription
+                END as Aging
 from (
 
                     select
