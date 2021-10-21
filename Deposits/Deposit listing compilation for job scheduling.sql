@@ -1,6 +1,6 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[COMPILE_DEPOSIT_LISTING]    Script Date: 10/19/2021 3:11:00 PM ******/
+/****** Object:  StoredProcedure [dbo].[COMPILE_DEPOSIT_LISTING]    Script Date: 10/21/2021 2:16:01 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -20,7 +20,7 @@ as
                 bs.bch_add as BranchName, 
                 a.acct_no AccountId, 
                 l.cis_no CustomerId,
-                saveplus.dbo.get_name_from_acct_no(a.bk,a.bch,a.acct_no) CustomerName,
+                (select CONCAT(z.lname,',',z.fname,' ',z.mname) from WEBLOAN.dbo.cis_info z where l.cis_no = z.cis_no)CustomerName,
                 a.name AccountName,
                 (select z.h_sadd from WEBLOAN.dbo.cis_info z where l.cis_no = z.cis_no) Address,
                 a.rxclass as ByteScheme,
@@ -48,15 +48,20 @@ as
 
             from saveplus.dbo.account a	---all regular and time deposits
                 with (nolock)
-            join WEBLOAN.dbo.cis_lookup l
-                with (nolock)	
-                on a.bk=l.bk and	
-                a.bch=l.bch and	
-                a.acct_no=l.acct_no
+            
             join SAVEPLUS.dbo.branch_set bs
                 with (nolock)
                 on a.bk=bs.bk and
                 a.bch=bs.bch
+
+				cross apply (
+			select top 1 * from WEBLOAN.dbo.cis_lookup z
+                with (nolock)	
+                where a.bk=z.bk and	
+                a.bch=z.bch and	
+                a.acct_no=z.acct_no
+				order by z.cis_no desc
+			) l
             where open_date <= @CutOffDate and
                     close_date is null
 
@@ -71,7 +76,7 @@ as
                 bs.bch_add as BranchName, 
                 a.acct_no AccountId, 
                 l.cis_no CustomerId,
-                saveplus.dbo.get_name_from_acct_no(a.bk,a.bch,a.acct_no) CustomerName,
+                (select CONCAT(z.lname,',',z.fname,' ',z.mname) from WEBLOAN.dbo.cis_info z where l.cis_no = z.cis_no)CustomerName,
                 a.name AccountName,
                 (select z.h_sadd from WEBLOAN.dbo.cis_info z where l.cis_no = z.cis_no) Address,
                 a.caclass as ByteScheme,
@@ -99,14 +104,17 @@ as
 
             from saveplus.dbo.ca_account a	---all regular and time deposits
                 with (nolock)
-            join WEBLOAN.dbo.cis_lookup l
+			cross apply(
+            select top 1 * from WEBLOAN.dbo.cis_lookup z
                 with (nolock)	
-                on a.bk=l.bk and	
-                a.bch=l.bch and	
-                a.acct_no=l.acct_no
+                where a.bk=z.bk and	
+                a.bch=z.bch and	
+                a.acct_no=z.acct_no
+				order by z.cis_no desc) l
             join SAVEPLUS.dbo.branch_set bs
                 with (nolock)
                 on a.bk=bs.bk and
                 a.bch=bs.bch
             where open_date <= @CutOffDate and
                     close_date is null ) x
+
