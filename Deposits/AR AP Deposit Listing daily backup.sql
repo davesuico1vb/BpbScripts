@@ -1,47 +1,12 @@
 USE [READONLY]
 GO
-
-/****** Object:  StoredProcedure [dbo].[BACKUP_DEPOSIT_LISTING]    Script Date: 10/14/2021 9:36:20 AM ******/
+/****** Object:  StoredProcedure [dbo].[COMPILE_AR_AP_DEPOSIT_LISTING]    Script Date: 10/22/2021 3:44:25 PM ******/
 SET ANSI_NULLS ON
 GO
-
 SET QUOTED_IDENTIFIER ON
 GO
 
-create PROCEDURE [dbo].[BACKUP_AR_AP_DEPOSIT_LISTING] @CutOffDate date=null
-AS
-
-	declare @date_end Datetime;
-
-	if @CutOffDate is null 
-	begin
-		set @CutOffDate = dateadd(day, -1, getdate()) 
-	end
-
-	set @date_end=@CutOffDate;
-
-    delete from AccountsReceivableAndPayableDepositListing where CutOffDate  = cast(@CutOffDate as date);
-
-	insert into AccountsReceivableAndPayableDepositListing
-            exec COMPILE_AR_AP_DEPOSIT_LISTING @date_end
-GO
-
-
-
-
-
-USE [READONLY]
-GO
-
-/****** Object:  StoredProcedure [dbo].[COMPILE_AR_AP_DEPOSIT_LISTING]    Script Date: 10/14/2021 9:38:35 AM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
-
-CREATE procedure [dbo].[COMPILE_AR_AP_DEPOSIT_LISTING] @CutOffDate Date = null
+ALTER procedure [dbo].[COMPILE_AR_AP_DEPOSIT_LISTING] @CutOffDate Date = null
 as
 			
 			if @CutOffDate is null
@@ -93,12 +58,9 @@ as
                 with (nolock)
                 on a.bk=bs.bk and
                 a.bch=bs.bch
-            where open_date <= @CutOffDate and
+            where cast(open_date as date) <= @CutOffDate and
                     close_date is null
 
 				and a.rxclass  in ('AR1','AP1')
 
 			) x
-GO
-
-

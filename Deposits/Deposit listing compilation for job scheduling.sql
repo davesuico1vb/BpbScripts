@@ -1,6 +1,6 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[COMPILE_DEPOSIT_LISTING]    Script Date: 10/21/2021 2:16:01 PM ******/
+/****** Object:  StoredProcedure [dbo].[COMPILE_DEPOSIT_LISTING]    Script Date: 10/22/2021 2:43:28 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -62,7 +62,7 @@ as
                 a.acct_no=z.acct_no
 				order by z.cis_no desc
 			) l
-            where open_date <= @CutOffDate and
+            where cast(open_date as date) <= @CutOffDate and
                     close_date is null
 
 				and a.rxclass not in ('AR1','AP1')
@@ -115,6 +115,6 @@ as
                 with (nolock)
                 on a.bk=bs.bk and
                 a.bch=bs.bch
-            where open_date <= @CutOffDate and
+            where cast(open_date as date) <= @CutOffDate and
                     close_date is null ) x
 
