@@ -1,16 +1,18 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 10/20/2021 11:09:15 AM ******/
+/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 11/4/2021 5:11:19 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+
 ALTER procedure [dbo].[GET_LOAN_LISTING]
     @toDate DateTime = null
 
 as 
 
-	if @toDate is null 
+	
+if @toDate is null 
 	set @toDate = getdate()
 
             select
@@ -79,7 +81,24 @@ from (
         where ld.bk=lai.bk
             and ld.bch=lai.bch
             and ld.acct_no=lai.acct_no))  as CustomerName,
-        (select h_sadd
+        (select trim(upper(replace(replace(replace(replace(isnull(z.h_sadd, ''),
+                                             isnull(z.h_village, ''),
+                                             ''),
+                                     isnull(z.h_barangay, ''),
+                                     ''),
+                             trim(replace(isnull(z.h_city, ''), '(CAPITAL)', '')),
+                             ''),
+                     isnull(z.h_state_prov, ''),
+                     '') + ' ' +
+             replace(replace(replace(isnull(z.h_village, ''),
+                                     isnull(z.h_barangay, ''),
+                                     ''),
+                             isnull(z.h_city, ''),
+                             ''),
+                     isnull(z.h_state_prov, ''),
+                     '') + ' ' + isnull(z.h_barangay, ''))
+	 + ' ' + 
+	 upper(trim(replace(isnull(z.h_city, ''), '(CAPITAL)', '')) + ' ' + isnull(z.h_state_prov, ''))) Address
         from WEBLOAN.dbo.cis_info z
         where z.cis_no = (select lai.cis_no
         from webloan.dbo.loan_acct_info lai
@@ -348,4 +367,5 @@ from (
                                         ) z
 
 order by z.BranchId;
+
 
