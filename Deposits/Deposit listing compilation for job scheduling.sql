@@ -1,6 +1,6 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[COMPILE_DEPOSIT_LISTING]    Script Date: 11/4/2021 5:15:40 PM ******/
+/****** Object:  StoredProcedure [dbo].[COMPILE_DEPOSIT_LISTING]    Script Date: 11/6/2021 9:05:15 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -71,7 +71,8 @@ from (
                     when readonly.dbo.fvb_acct_status(a.bk,a.bch,a.acct_no,@CutOffDate,1) = 3 then 'Dormant'
                     when readonly.dbo.fvb_acct_status(a.bk,a.bch,a.acct_no,@CutOffDate,1) = 4 then 'Closed'
                     else 'Not Found'
-                end as Status
+                end as Status,
+			cast(a.value_date as date) ValueDate
 
         from saveplus.dbo.account a	---all regular and time deposits
                 with (nolock)
@@ -132,7 +133,8 @@ from (
                     when readonly.dbo.fvb_acct_status(a.bk,a.bch,a.acct_no,@CutOffDate,2) = 3 then 'Dormant'
                     when readonly.dbo.fvb_acct_status(a.bk,a.bch,a.acct_no,@CutOffDate,2) = 4 then 'Closed'
                     else 'Not Found'
-                end as Status
+                end as Status,
+			null ValueDate
 
         from saveplus.dbo.ca_account a	---all regular and time deposits
                 with (nolock)
