@@ -2,20 +2,20 @@
 select 
 LOWER(REPLACE(concat(x.fname,x.mname,x.lname,x.p_bday),' ','')) CustomerNameHash,
 
-x.cis_no,
-x.bch,
-(select y.bch_add from WEBLOAN.dbo.branch_set y where x.bch = y.bch) branch_name,
-x.fname,
-LEN(x.fname) fnamelen,
-x.mname,
-LEN(x.mname) mnamelen,
-x.lname,
-LEN(x.lname) lnamelen,
-x.p_bday,
-x.cis_cleared,
-x.cis_cleared_date,
+x.cis_no CustomerId,
+x.bch BranchId,
+(select y.bch_add from WEBLOAN.dbo.branch_set y where x.bch = y.bch) BranchName,
+x.fname FirstName,
+LEN(x.fname) FirstNameLength,
+x.mname MiddleName,
+LEN(x.mname) MiddleNameLength,
+x.lname LastName,
+LEN(x.lname) LastNameLength,
+x.p_bday Birthdate,
+x.cis_cleared IsCleared,
+cast(x.cis_cleared_date as date)CisClearedDate,
 
-x.date_of_creation,
+cast(x.date_of_creation as date) CreationDate,
 
 (
 	select count(*) from (
