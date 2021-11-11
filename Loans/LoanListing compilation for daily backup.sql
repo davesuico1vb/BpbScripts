@@ -1,6 +1,6 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 11/4/2021 5:11:19 PM ******/
+/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 11/11/2021 3:04:41 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -110,18 +110,23 @@ from (
         ld.principal Principal,
         webloan.dbo.get_virtual_principal_bal(bk,bch,acct_no,ld.loan_no,@toDate) as BytePrincipalBalance,
 
-        isnull((select sum(isnull(ag.int_amort,0))
+        isnull((select
+            sum(ag.int_amort)
         from webloan.dbo.amort_guide ag
-        where ag.loan_no = ld.loan_no ),0) as TotalInterest,
+        where ag.loan_no = ld.loan_no), (select sum(ag.int_amort)
+        from webloan.dbo.amort_data ag
+        where ag.loan_no = ld.loan_no))TotalInterest,
 
-        isnull((select sum(isnull(ag.int_amort,0))
+        (isnull((select sum(ag.int_amort)
         from webloan.dbo.amort_guide ag
-        where ag.loan_no = ld.loan_no ) -
-                                                                
-                                                    (select sum(isnull(ph.paid_int,0))
+        where ag.loan_no = ld.loan_no), (select sum(ag.int_amort)
+        from WEBLOAN.dbo.amort_data ag
+        where ag.loan_no = ld.loan_no) ) 
+		- 
+		(select isnull(sum(ph.paid_int),0)
         from webloan.dbo.payment_history ph
         where ph.loan_no=ld.loan_no and
-            datediff(day,payment_date,@toDate)>=0),0) as TotalInterestBalance,
+            cast(payment_date as date) <= @toDate))  TotalInterestBalance,
 
         isnull((select sum(isnull(ph.paid_pdi,0))
         from webloan.dbo.payment_history ph
@@ -140,7 +145,11 @@ from (
 
         isnull((select max(z.amort_no)
         from webloan.dbo.amort_guide z
-        where z.loan_no = ld.loan_no),1) as numberofamort,
+        where z.loan_no = ld.loan_no),
+		(select max(amort_no)
+        from WEBLOAN.dbo.amort_data
+        where loan_no=ld.loan_no)) as numberofamort,
+
         ld.granted_rate GrantedRate,
         ld.effective_rate_annum EffectiveRatePerAnnum,
         case							
@@ -153,22 +162,35 @@ from (
                     else datediff(day,webloan.dbo.get_min_amort_unpaid(ld.loan_no,@toDate),@toDate)								
                     end as LoanAge,
         webloan.dbo.get_loan_status_str(bk,bch,ld.loan_no,@toDate) as Status,
-        webloan.dbo.get_virtual_air_bal(bk,bch,ld.loan_no,@toDate) as AccruedInterestReceivable,
+        webloan.dbo.get_virtual_air_bal(bk,bch,ld.loan_no,@toDate) as 
+        AccruedInterestReceivable,
         ld.air_bal AccruedInterestReceivableBalance,
         ld.ar_bal ArBalance,
         webloan.dbo.get_virtual_uid_bal(bk,bch,ld.loan_no,@toDate) as ByteUidBalance,
 
-        isnull((select sum(isnull(ag.principal_amort,0))
+        isnull((select sum(ag.principal_amort)
         from webloan.dbo.amort_guide ag
-        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),0) as TotalPrincipalDue,
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),
+		(select isnull(sum(ag.principal_amort),0)
+        from webloan.dbo.amort_data ag
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0)) as TotalPrincipalDue,
 
-        isnull((select sum(isnull(ag.int_amort,0))
+        isnull((select sum(ag.int_amort)
         from webloan.dbo.amort_guide ag
-        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),0) as TotalInterestDue,
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),
+		
+		(select isnull(sum(ag.int_amort),0)
+        from webloan.dbo.amort_data ag
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0)
+		) as TotalInterestDue,
 
-        isnull((select sum(isnull(ag.total_amort,0))
+        isnull((select sum(ag.total_amort)
         from webloan.dbo.amort_guide ag
-        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),0) as TotalAmortDue,
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),
+		(select isnull(sum(ag.total_amort),0)
+        from webloan.dbo.amort_data ag
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0)
+		) as TotalAmortDue,
 
         isnull((select sum(isnull(ph.paid_int,0))
         from webloan.dbo.payment_history ph
@@ -190,29 +212,41 @@ from (
         where ph.loan_no= ld.loan_no
             and datediff(day,payment_date,@toDate)>=0),0) as TotalAmortPaid,
 
-        isnull((select sum(isnull(ag.principal_amort,0))
+        isnull((select sum(ag.principal_amort)
         from webloan.dbo.amort_guide ag
-        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0) -
-
-                    (select sum(isnull(ph.paid_principal,0))
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0
+                    ),(select isnull(sum(ag.principal_amort),0)
+        from webloan.dbo.amort_data ag
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0))		
+		-
+		(select isnull(sum(ph.paid_principal),0)
         from webloan.dbo.payment_history ph
         where ph.loan_no= ld.loan_no
-            and datediff(day,payment_date,@toDate)>=0),0) as TotalPrincipalOverdue,
+            and datediff(day,payment_date,@toDate)>=0)
+		as TotalPrincipalOverdue,
         ---------------------
 
-        isnull((select sum(isnull(ag.int_amort,0))
+        isnull((select sum(ag.int_amort)
         from webloan.dbo.amort_guide ag
-        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0) -
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),
+		
+		(select isnull(sum(ag.int_amort),0)
+        from webloan.dbo.amort_data ag
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0)) -
 
-                    (select sum(isnull(ph.paid_int,0))
+                    (select isnull(sum(ph.paid_int),0)
         from webloan.dbo.payment_history ph
         where ph.loan_no= ld.loan_no
-            and datediff(day,payment_date,@toDate)>=0),0) as TotalInterestOverdue,
+            and datediff(day,payment_date,@toDate)>=0) as TotalInterestOverdue,
 
         ---------------------
-        (isnull((select sum(isnull(ag.total_amort,0))
+        (isnull((select sum(ag.total_amort)
         from webloan.dbo.amort_guide ag
-        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),0) -
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),(
+		select isnull(sum(ag.total_amort),0)
+        from webloan.dbo.amort_data ag
+        where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0
+		)) -
 
                                                                         
                     isnull((select sum(isnull(ph.paid_int,0))
@@ -274,7 +308,7 @@ from (
         (select top 1
             int.payment_date
         from
-            (                                                                select ph.payment_date, ph.paid_pdi as int_paid
+            (                                                                                                                                                                                                                                                                select ph.payment_date, ph.paid_pdi as int_paid
                 from webloan.dbo.payment_history ph
                 where ph.bch = ld.bch and ph.loan_no = ld.loan_no
                     and ph.paid_pdi > 0 and DATEDIFF(day,payment_date,@toDate) >= 0
@@ -290,7 +324,7 @@ from (
         (select top 1
             int.int_paid
         from
-            (                                                select ph.payment_date, ph.paid_pdi as int_paid
+            (                                                                                                                                                                                                                                                select ph.payment_date, ph.paid_pdi as int_paid
                 from webloan.dbo.payment_history ph
                 where ph.bch = ld.bch and ph.loan_no = ld.loan_no
                     and ph.paid_pdi > 0 and DATEDIFF(day,payment_date,@toDate) >= 0
@@ -359,7 +393,7 @@ from (
                     DATEDIFF(day,date_granted,@toDate) >= 0 -- use < if releases on or after
         and WEBLOAN.dbo.is_loan(ld.loan_no) = 1
 
-        and webloan.dbo.get_loan_status(ld.bk,ld.bch,ld.loan_no,@toDate) != 10
+        and webloan.dbo.get_loan_status(ld.bk,ld.bch,ld.loan_no,@toDate) not in (10,4)
 
         and not exists (select 1
         from READONLY.dbo.loan_listing_exclusions a
