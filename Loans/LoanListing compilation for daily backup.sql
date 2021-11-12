@@ -1,6 +1,6 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 11/11/2021 3:04:41 PM ******/
+/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 11/12/2021 8:45:52 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -382,7 +382,9 @@ from (
         from webloan.dbo.mis_group c
         where c.group_no = 4 ---mis 4 loan purpose to industry
             and c.child_node = 1
-            and ld.cat_loan_industry = c.id_code) as LoanPurposeToIndustry
+            and ld.cat_loan_industry = c.id_code) as LoanPurposeToIndustry,
+
+		webloan.dbo.charges_ledger_get_balance(ld.loan_no,'SC', @toDate) as ServiceChargeBalance
 
     from webloan.dbo.loan_data ld	
                                                                     with (nolock)
