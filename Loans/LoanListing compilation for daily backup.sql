@@ -240,10 +240,10 @@ from (
             and datediff(day,payment_date,@toDate)>=0) as TotalInterestOverdue,
 
         ---------------------
-        (isnull((select sum(ag.total_amort)
+        (isnull((select sum(ag.principal_amort) + sum(ag.int_amort)
         from webloan.dbo.amort_guide ag
         where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),(
-		select isnull(sum(ag.total_amort),0)
+		select isnull(sum(ag.total_amort),0) + isnull(sum(ag.int_amort),0)
         from webloan.dbo.amort_data ag
         where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0
 		)) -
@@ -308,7 +308,7 @@ from (
         (select top 1
             int.payment_date
         from
-            (                                                                                                                                                                                                                                                                select ph.payment_date, ph.paid_pdi as int_paid
+            (                                                                                                                                                                                                                                                                                                select ph.payment_date, ph.paid_pdi as int_paid
                 from webloan.dbo.payment_history ph
                 where ph.bch = ld.bch and ph.loan_no = ld.loan_no
                     and ph.paid_pdi > 0 and DATEDIFF(day,payment_date,@toDate) >= 0
@@ -324,7 +324,7 @@ from (
         (select top 1
             int.int_paid
         from
-            (                                                                                                                                                                                                                                                select ph.payment_date, ph.paid_pdi as int_paid
+            (                                                                                                                                                                                                                                                                                select ph.payment_date, ph.paid_pdi as int_paid
                 from webloan.dbo.payment_history ph
                 where ph.bch = ld.bch and ph.loan_no = ld.loan_no
                     and ph.paid_pdi > 0 and DATEDIFF(day,payment_date,@toDate) >= 0
@@ -384,7 +384,7 @@ from (
             and c.child_node = 1
             and ld.cat_loan_industry = c.id_code) as LoanPurposeToIndustry,
 
-		webloan.dbo.charges_ledger_get_balance(ld.loan_no,'SC', @toDate) as ServiceChargeBalance
+        webloan.dbo.charges_ledger_get_balance(ld.loan_no,'SC', @toDate) as ServiceChargeBalance
 
     from webloan.dbo.loan_data ld	
                                                                     with (nolock)
