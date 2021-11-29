@@ -243,7 +243,7 @@ from (
         (isnull((select sum(ag.principal_amort) + sum(ag.int_amort)
         from webloan.dbo.amort_guide ag
         where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0),(
-		select isnull(sum(ag.total_amort),0) + isnull(sum(ag.int_amort),0)
+		select isnull(sum(ag.principal_amort),0) + isnull(sum(ag.int_amort),0)
         from webloan.dbo.amort_data ag
         where ag.loan_no = ld.loan_no and datediff(day,amort_date,@toDate)>=0
 		)) -
