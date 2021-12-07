@@ -1,67 +1,67 @@
-select 
+select
 
-d.* ,
-cast(e.date_granted as date) NewAgreementGrantedDate,
-e.principal NewAgreementPrincipal,
-webloan.dbo.get_virtual_principal_bal(e.bk,e.bch,e.acct_no,e.loan_no,GETDATE()) NewAgreementPrincipalBalance
-from 
+    d.* ,
+    cast(e.date_granted as date) NewAgreementGrantedDate,
+    e.principal NewAgreementPrincipal,
+    webloan.dbo.get_virtual_principal_bal(e.bk,e.bch,e.acct_no,e.loan_no,GETDATE()) NewAgreementPrincipalBalance
+from
 
-(
+    (
 
 
 
-select 
+select
 
-b.loan_no OldAgreementId,
-b.bch OldAgreementBranchId,
-webloan.dbo.get_virtual_principal_bal(b.bk,b.bch,b.acct_no,b.loan_no,GETDATE()) OldPrincipalBalance,
-(
-select 
+        b.loan_no OldAgreementId,
+        b.bch OldAgreementBranchId,
+        webloan.dbo.get_virtual_principal_bal(b.bk,b.bch,b.acct_no,b.loan_no,GETDATE()) OldPrincipalBalance,
+        (
+select
 
-c.loan_no
+            c.loan_no
 
-from loan_data c
+        from loan_data c
 
-where c.c_p_loan_no = b.loan_no
+        where c.c_p_loan_no = b.loan_no
 
-and WEBLOAN.dbo.is_loan(c.loan_no) =1
-and c.close_date is null
+            and WEBLOAN.dbo.is_loan(c.loan_no) =1
+            and c.close_date is null
 
 ) NewAgreementId
 
 
-from
+    from
 
-WEBLOAN.dbo.loan_data b
+        WEBLOAN.dbo.loan_data b
 
-where b.loan_no in (
+    where b.loan_no in (
 
-select 
+select
 
-a.c_p_loan_no
-
-
-from
+            a.c_p_loan_no
 
 
-WEBLOAN.dbo.loan_data a
+        from
 
-where c_p_loan_no <> ''
 
-and WEBLOAN.dbo.is_loan(a.loan_no) = 1
+            WEBLOAN.dbo.loan_data a
 
-and a.close_date is null
+        where c_p_loan_no <> ''
+
+            and WEBLOAN.dbo.is_loan(a.loan_no) = 1
+
+            and a.close_date is null
 
 )
 
 
-and WEBLOAN.dbo.is_loan(b.loan_no) = 1
+        and WEBLOAN.dbo.is_loan(b.loan_no) = 1
 
-and b.close_date is null
-)d 
+        and b.close_date is null
+)d
 
-left join loan_data e
+    left join loan_data e
 
-on d.NewAgreementId = e.loan_no
+    on d.NewAgreementId = e.loan_no
 
 where d.OldPrincipalBalance <> 0
