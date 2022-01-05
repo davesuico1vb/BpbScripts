@@ -1,10 +1,11 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 11/12/2021 8:45:52 AM ******/
+/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 1/5/2022 8:19:32 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 ALTER procedure [dbo].[GET_LOAN_LISTING]
     @toDate DateTime = null
@@ -384,7 +385,17 @@ from (
             and c.child_node = 1
             and ld.cat_loan_industry = c.id_code) as LoanPurposeToIndustry,
 
-        webloan.dbo.charges_ledger_get_balance(ld.loan_no,'SC', @toDate) as ServiceChargeBalance
+        readonly.dbo.charges_ledger_get_balance(ld.loan_no,'SC', @toDate) as ServiceChargeBalance,
+
+		case  ld.payment_interval
+		when 30 then 'Monthly'
+		when 90 then 'Quarterly'
+		when 180 then 'Semi-annual'
+		when 360 then 'Annual'
+		else 'Lumpsum'
+		end as PaymentFrequency,
+
+		ld.payment_interval PaymentInterval
 
     from webloan.dbo.loan_data ld	
                                                                     with (nolock)
