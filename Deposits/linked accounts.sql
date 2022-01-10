@@ -7,7 +7,8 @@ a.acct_no AccountId,
 SAVEPLUS.dbo.get_virtual_ebal12(a.bk,a.bch,a.acct_no,@cutoff,1) AvailableBalance,
 SAVEPLUS.dbo.get_virtual_ebal12(a.bk,a.bch,a.acct_no,@cutoff,2) LedgerBalance,
 a.sa_acct_no SavingsAccountId,
-a.sa_bch SavingsAccountBranchId
+a.sa_bch SavingsAccountBranchId,
+@cutoff CutOffDate
  
 from SAVEPLUS.dbo.ca_account a
 
