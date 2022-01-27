@@ -1,6 +1,6 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 1/6/2022 4:07:36 PM ******/
+/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 1/27/2022 3:04:22 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -153,15 +153,9 @@ from (
 
         ld.granted_rate GrantedRate,
         ld.effective_rate_annum EffectiveRatePerAnnum,
-        case							
-                    when datediff(day,@toDate,ld.date_granted) > 0 then -1								
-                    when lp.pay_type=3 then datediff(day,webloan.dbo.get_last_uid(ld.loan_no,@toDate),@toDate) --- for UID ---								
-                    --- Daily Triggered / SavePlus StartUp -----------------------------------------------------------------------								
-                    when lp.auto_transfer_pastdue in (3,4) and lp.pay_type in (0,1,2)								
-                    then datediff(day,webloan.dbo.get_min_amort_unpaid(ld.loan_no,@toDate),@toDate)								
-                    ------------------------------------------------------------------------------------------------------------								
-                    else datediff(day,webloan.dbo.get_min_amort_unpaid(ld.loan_no,@toDate),@toDate)								
-                    end as LoanAge,
+
+		READONLY.dbo.GetLoanAge(ld.loan_no,@toDate,ld.date_granted,lp.id_code,lp.pay_type,lp.auto_transfer_pastdue) as LoanAge,
+        
         webloan.dbo.get_loan_status_str(bk,bch,ld.loan_no,@toDate) as Status,
         webloan.dbo.get_virtual_air_bal(bk,bch,ld.loan_no,@toDate) as 
         AccruedInterestReceivable,
