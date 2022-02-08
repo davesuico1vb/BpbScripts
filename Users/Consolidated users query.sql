@@ -5,7 +5,7 @@ SELECT
 	bch branch,
 	user_name username,
 	fullname,
-	user_disable is_enabled,
+	~user_disable is_enabled,
 	cast(permanent_disable as date) permanent_disabled_date,
 	cast(valid_until as date) expiry_date,
 	'SavePlus' system
