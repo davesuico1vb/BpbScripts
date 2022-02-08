@@ -5,6 +5,9 @@ SELECT
 	bch branch,
 	user_name username,
 	fullname,
+	user_disable is_enabled,
+	cast(permanent_disable as date) permanent_disabled_date,
+	cast(valid_until as date) expiry_date,
 	'SavePlus' system
  
 FROM SAVEPLUS.DBO.sp_users
@@ -15,6 +18,9 @@ select
 	bch branch,
 	username,
 	fullname,
+	enabled is_enabled,
+	null permanent_disabled_date,
+	null expiry_date,
 	'WebLoan' system
 from WEBLOAN.dbo.user_file
 
@@ -24,6 +30,9 @@ select
 bch branch,
 username,
 fullname,
+disabled is_enabled,
+null permanent_disabled_date,
+null expiry_date,
 'GlNet' type
 
 from glnet_server.glnet.dbo.user_file
