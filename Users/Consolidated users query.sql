@@ -30,7 +30,7 @@ select
 bch branch,
 username,
 fullname,
-disabled is_enabled,
+~disabled is_enabled,
 null permanent_disabled_date,
 null expiry_date,
 'GlNet' type
