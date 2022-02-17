@@ -15,4 +15,4 @@ left join webloan.dbo.loan_data b on cast(a.agreementid as nvarchar(MAX)) = b.lo
 
 where a.PRINCIPAL_BALANCE <=0
 
-
+and close_date is null
