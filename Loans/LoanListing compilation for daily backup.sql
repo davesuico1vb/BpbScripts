@@ -1,6 +1,6 @@
 USE [READONLY]
 GO
-/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 1/27/2022 3:04:22 PM ******/
+/****** Object:  StoredProcedure [dbo].[GET_LOAN_LISTING]    Script Date: 3/23/2022 1:30:31 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -154,8 +154,8 @@ from (
         ld.granted_rate GrantedRate,
         ld.effective_rate_annum EffectiveRatePerAnnum,
 
-		READONLY.dbo.GetLoanAge(ld.loan_no,@toDate,ld.date_granted,lp.id_code,lp.pay_type,lp.auto_transfer_pastdue) as LoanAge,
-        
+        READONLY.dbo.GetLoanAge(ld.loan_no,@toDate,ld.date_granted,lp.id_code,lp.pay_type,lp.auto_transfer_pastdue) as LoanAge,
+
         webloan.dbo.get_loan_status_str(bk,bch,ld.loan_no,@toDate) as Status,
         webloan.dbo.get_virtual_air_bal(bk,bch,ld.loan_no,@toDate) as 
         AccruedInterestReceivable,
@@ -303,7 +303,7 @@ from (
         (select top 1
             int.payment_date
         from
-            (                                                                                                                                                                                                                                                                                                                select ph.payment_date, ph.paid_pdi as int_paid
+            (                                                                                                                                                                                                                                                                                                                                                select ph.payment_date, ph.paid_pdi as int_paid
                 from webloan.dbo.payment_history ph
                 where ph.bch = ld.bch and ph.loan_no = ld.loan_no
                     and ph.paid_pdi > 0 and DATEDIFF(day,payment_date,@toDate) >= 0
@@ -319,7 +319,7 @@ from (
         (select top 1
             int.int_paid
         from
-            (                                                                                                                                                                                                                                                                                                select ph.payment_date, ph.paid_pdi as int_paid
+            (                                                                                                                                                                                                                                                                                                                                select ph.payment_date, ph.paid_pdi as int_paid
                 from webloan.dbo.payment_history ph
                 where ph.bch = ld.bch and ph.loan_no = ld.loan_no
                     and ph.paid_pdi > 0 and DATEDIFF(day,payment_date,@toDate) >= 0
@@ -384,11 +384,11 @@ from (
         webloan.dbo.get_loan_discount_balance2(ld.loan_no,@toDate) as ServiceChargeBalance,
 
         case  ld.payment_interval
-		when 30 then 'Monthly'
-		when 90 then 'Quarterly'
-		when 180 then 'Semi-annual'
-		when 360 then 'Annual'
-		else 'Lumpsum'
+		when 30 then 'MONTHLY'
+		when 90 then 'QUARTERLY'
+		when 180 then 'HALF_YEARLY'
+		when 360 then 'YEARLY'
+		else 'LUMPSUM'
 		end as PaymentFrequency,
 
         ld.payment_interval PaymentInterval
