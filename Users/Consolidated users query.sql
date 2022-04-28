@@ -1,41 +1,45 @@
-select * from 
+select *
+from
 
-(
-SELECT 
-	bch branch,
-	user_name username,
-	fullname,
-	~user_disable is_enabled,
-	cast(permanent_disable as date) permanent_disabled_date,
-	cast(valid_until as date) expiry_date,
-	'SavePlus' system
- 
-FROM SAVEPLUS.DBO.sp_users
+	(
+			SELECT
+			bch branch,
+			user_name username,
+			fullname,
+			~user_disable is_enabled,
+			cast(permanent_disable as date) permanent_disabled_date,
+			cast(valid_until as date) expiry_date,
+			group_code user_group,
+			'SavePlus' system
 
-union
+		FROM SAVEPLUS.DBO.sp_users
 
-select
-	bch branch,
-	username,
-	fullname,
-	enabled is_enabled,
-	null permanent_disabled_date,
-	null expiry_date,
-	'WebLoan' system
-from WEBLOAN.dbo.user_file
+	union
 
-union
+		select
+			bch branch,
+			username,
+			fullname,
+			enabled is_enabled,
+			null permanent_disabled_date,
+			null expiry_date,
+			group_code user_group,
+			'WebLoan' system
+		from WEBLOAN.dbo.user_file
 
-select 
-bch branch,
-username,
-fullname,
-~disabled is_enabled,
-null permanent_disabled_date,
-null expiry_date,
-'GlNet' type
+	union
 
-from glnet_server.glnet.dbo.user_file
+		select
+			bch branch,
+			username,
+			fullname,
+			~disabled is_enabled,
+			null permanent_disabled_date,
+			null expiry_date,
+			group_code user_group,
+			'GlNet' type
+
+		from glnet_server.glnet.dbo.user_file
 
 ) b
 
@@ -50,9 +54,9 @@ where b.fullname not in (
 ','
 )
 
-and b.fullname not like  '%SYS%'
+	and b.fullname not like  '%SYS%'
 
-and b.fullname not like  '%BCH%'
+	and b.fullname not like  '%BCH%'
 
 
 order by b.fullname
